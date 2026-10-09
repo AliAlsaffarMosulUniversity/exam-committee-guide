@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>دليل التراجع وتعديل الحالات</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap">
+<style>
+/* Layout: one reading column like a committee register; the decision helper is the only loud element, everything else is quiet ruled lists coloured by verdict. */
+:root{
+  --bg:#ffffff; --surface:#ffffff; --sunken:#e8eef0; --line:#d3dde1;
+  --ink:#14293a; --muted:#566b78; --accent:#0d6e6a; --accent-ink:#ffffff; --head:#16324a;
+  --ok:#17693f; --ok-bg:#e3f3ea; --cond:#8a5a06; --cond-bg:#fdf1d6;
+  --no:#a8323e; --no-bg:#fde8ea; --unk:#4d5f6b; --unk-bg:#e6ebee;
+  --display:"Cairo","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+body{direction:rtl;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.85}
+.wrap{max-width:860px;margin-inline:auto;padding-inline:18px;padding-block:0 64px;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.45}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* header */
+.top{background:var(--head);color:#eef4f6;padding-block:34px 30px}
+.top .in{max-width:860px;margin-inline:auto;padding-inline:18px;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:13px;font-weight:600;color:#8fd6cf;letter-spacing:.02em}
+.top h1{font-size:clamp(26px,6vw,40px);font-weight:700}
+.top p{color:#c3d3da;max-width:60ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+
+.chip{display:inline-flex;align-items:center;font-size:13px;font-weight:700;padding:2px 12px;border-radius:999px;white-space:nowrap}
+.v-ok{background:var(--ok-bg);color:var(--ok)} .v-cond{background:var(--cond-bg);color:var(--cond)}
+.v-no{background:var(--no-bg);color:var(--no)} .v-unk{background:var(--unk-bg);color:var(--unk)}
+
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav .in{max-width:860px;margin-inline:auto;padding:10px 18px;display:flex;gap:8px;overflow-x:auto}
+nav a{flex:none;text-decoration:none;color:var(--muted);font-size:14px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+nav a:hover{color:var(--accent);border-color:var(--accent)}
+
+section{display:flex;flex-direction:column;gap:16px;scroll-margin-top:70px}
+.sec-h{display:flex;flex-direction:column;gap:4px}
+.sec-h h2{font-size:24px}
+.sec-h p{color:var(--muted)}
+h3{font-size:17px}
+
+/* decision helper */
+.helper{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.q{font-family:var(--display);font-size:19px;font-weight:600}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.opt{text-align:start;background:var(--sunken);border:1.5px solid transparent;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.opt b{font-weight:600}
+.opt span{font-size:14px;color:var(--muted);line-height:1.6}
+.opt:hover{border-color:var(--accent)}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--surface)}
+.result{border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.result.v-ok,.result.v-cond,.result.v-no{color:var(--ink)}
+.result h3{font-size:18px}
+.result ul{margin:0;padding-inline-start:20px}
+.result .who{font-size:14px;color:var(--muted)}
+.reset{align-self:flex-start;background:none;border:0;color:var(--accent);font-weight:600;padding:0;text-decoration:underline}
+
+/* steps */
+.phase{display:flex;flex-direction:column;gap:10px}
+.phase>h3{color:var(--accent)}
+.steps{counter-reset:none;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.seq{counter-reset:st}
+.steps li{counter-increment:st;display:grid;grid-template-columns:38px 1fr;gap:12px;padding:13px 16px;border-top:1px solid var(--line)}
+.steps li:first-child{border-top:0}
+.steps li::before{content:counter(st,arabic-indic);font-family:var(--display);font-weight:700;font-size:18px;color:var(--accent);background:var(--sunken);border-radius:8px;height:34px;display:grid;place-items:center}
+.steps li>div{min-width:0;display:flex;flex-direction:column}
+.steps b{font-weight:600}
+.steps span{color:var(--muted);font-size:15px}
+.steps em{font-style:normal;font-size:13px;font-weight:600;color:var(--accent)}
+.note{border-inline-start:4px solid;border-radius:8px;padding:12px 16px;font-size:15px}
+.note.v-ok{border-color:var(--ok)} .note.v-cond{border-color:var(--cond)} .note.v-no{border-color:var(--no)} .note.v-unk{border-color:var(--unk)}
+.note b{font-weight:700}
+
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.box p,.box li{font-size:15px;color:var(--muted)}
+.box ul{margin:0;padding-inline-start:20px}
+.box li b{color:var(--ink);font-weight:600}
+
+/* rules */
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.filters button{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 14px;font-size:14px;font-weight:600}
+.filters button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.rules{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.rules li{display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:start;padding:13px 16px;border-top:1px solid var(--line)}
+.rules li:first-child{border-top:0}
+.rules .chip{justify-content:center;margin-top:3px}
+.rules div{min-width:0;display:flex;flex-direction:column}
+.rules b{font-weight:600}
+.rules span{font-size:15px;color:var(--muted)}
+
+/* quiz */
+.quiz{display:flex;flex-direction:column;gap:14px}
+.qz{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.qz p.t{font-weight:600}
+.qz .a{display:flex;flex-wrap:wrap;gap:8px}
+.qz .a button{background:var(--sunken);border:1.5px solid transparent;border-radius:8px;padding:5px 14px;font-size:15px}
+.qz .a button:hover{border-color:var(--accent)}
+.qz .a button.right{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.qz .a button.wrong{background:var(--no-bg);color:var(--no);border-color:var(--no)}
+.qz .fb{font-size:15px;color:var(--muted)}
+.score{font-family:var(--display);font-weight:600;color:var(--accent)}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:480px){ .rules li{grid-template-columns:1fr;gap:6px} .rules .chip{justify-self:start} }
+
+/* v2: white ground, heavier type, raised colourful buttons */
+:root{--b1:#1f7ae0;--b1d:#124e96;--b2:#e8590c;--b2d:#9c3a05;--b3:#7b3fd1;--b3d:#4f2490;--b4:#0f9d76;--b4d:#086249;--b5:#d6336c;--b5d:#8f1c45;--b6:#c98a00;--b6d:#855b00;--btn-ink:#ffffff}
+body{font-weight:500;font-size:17px}
+h1,h2,h3,.q{font-weight:800}
+.top h1{font-weight:900;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.sec-h h2{font-size:27px;color:var(--head)}
+.steps b,.rules b,.opt b,.box li b{font-weight:700}
+.helper,.box,.steps,.rules,.qz{box-shadow:0 2px 0 var(--line),0 8px 20px rgba(20,41,58,.07)}
+nav a,.opt,.filters button,.qz .a button,.reset{--c:var(--b1);--d:var(--b1d);background:linear-gradient(180deg,color-mix(in srgb,var(--c) 82%,#fff),var(--c));color:var(--btn-ink);border:0;border-radius:12px;font-weight:700;box-shadow:0 5px 0 var(--d),0 9px 14px rgba(20,41,58,.22),inset 0 1px 0 rgba(255,255,255,.45);text-shadow:0 1px 0 rgba(0,0,0,.25);transition:transform .08s,box-shadow .08s;text-decoration:none}
+nav a:hover,.opt:hover,.filters button:hover,.qz .a button:hover,.reset:hover{filter:brightness(1.07);color:var(--btn-ink)}
+nav a:active,.opt:active,.filters button:active,.qz .a button:active,.reset:active,.opt[aria-pressed="true"],.filters button[aria-pressed="true"]{transform:translateY(4px);box-shadow:0 1px 0 var(--d),0 2px 4px rgba(20,41,58,.25),inset 0 2px 4px rgba(0,0,0,.25)}
+nav .in{padding-bottom:16px}
+nav a{padding:6px 14px}
+.opt{padding:14px 16px}
+.opt span{color:var(--btn-ink);opacity:.92}
+.opt[aria-pressed="true"]{background:var(--d);outline:3px solid color-mix(in srgb,var(--c) 45%,#fff);outline-offset:2px}
+.filters button[aria-pressed="true"]{background:var(--d);color:var(--btn-ink)}
+.filters button,.qz .a button{padding:7px 18px}
+.reset{padding:7px 18px;--c:var(--b5);--d:var(--b5d)}
+:is(nav a,.opt,.filters button,.qz .a button):nth-child(6n+2){--c:var(--b2);--d:var(--b2d)}
+:is(nav a,.opt,.filters button,.qz .a button):nth-child(6n+3){--c:var(--b3);--d:var(--b3d)}
+:is(nav a,.opt,.filters button,.qz .a button):nth-child(6n+4){--c:var(--b4);--d:var(--b4d)}
+:is(nav a,.opt,.filters button,.qz .a button):nth-child(6n+5){--c:var(--b5);--d:var(--b5d)}
+:is(nav a,.opt,.filters button,.qz .a button):nth-child(6n+6){--c:var(--b6);--d:var(--b6d)}
+.qz .a button.right{--c:#17803f;--d:#0d4f26;color:var(--btn-ink);background:var(--c)}
+.qz .a button.wrong{--c:#c0303d;--d:#7d1a24;color:var(--btn-ink);background:var(--c)}
+@media (prefers-reduced-motion:reduce){nav a,.opt,.filters button,.qz .a button,.reset{transition:none}}
+</style>
+</head>
+<body style="margin:0">
+
+<header class="top"><div class="in">
+  <span class="eyebrow">نظام اللجنة الامتحانية</span>
+  <h1>دليل التراجع وتعديل الحالات</h1>
+  <p>شرح مبسّط يجيب عن سؤال واحد: متى أستطيع تعديل درجة أو حالة، ومتى أستطيع التراجع عن نتيجة معلنة؟</p>
+  <div class="legend" aria-label="مفتاح الألوان">
+    <span class="chip v-ok">مسموح</span><span class="chip v-cond">بشروط</span><span class="chip v-no">ممنوع</span><span class="chip v-unk">غير محدد صراحة</span>
+  </div>
+</div></header>
+
+<nav aria-label="أقسام الدليل"><div class="in">
+  <a href="#helper">اعرف حالتك</a><a href="#audit">التدقيق</a><a href="#rollback">التراجع بعد الإعلان</a><a href="#status">أنواع الحالات</a><a href="#appeals">الاعتراضات والقرار</a><a href="#rules">المرجع السريع</a><a href="#open">غير المحسوم</a><a href="#quiz">اختبر نفسك</a>
+</div></nav>
+
+<div class="wrap">
+
+<section id="helper" style="margin-top:36px">
+  <div class="sec-h"><h2>اعرف حالتك في خطوتين</h2><p>القاعدة الذهبية: حدّد المرحلة أولًا، ثم حالة السجل، ثم نوع الإجراء.</p></div>
+  <div class="helper">
+    <div class="q">ما المرحلة الحالية للمادة؟</div>
+    <div class="opts" id="q1"></div>
+    <div id="q2wrap" hidden><div class="q" id="q2t" style="margin-bottom:12px"></div><div class="opts" id="q2"></div></div>
+    <div id="res" hidden></div>
+    <button class="reset" id="reset" hidden>ابدأ من جديد</button>
+  </div>
+  <p class="note v-unk">شرطان لازمان لأي عمل: صلاحية مناسبة في نظام الصلاحيات، والارتباط باللجنة.</p>
+</section>
+
+<section id="audit">
+  <div class="sec-h"><h2>التدقيق وفتح السجل للتصحيح</h2><p>بعد إرسال المادة إلى التدقيق، الباب الوحيد للتعديل هو رفض السجل مع سبب واضح.</p></div>
+  <div class="phase seq">
+    <h3>قبل الإرسال إلى التدقيق</h3>
+    <ol class="steps">
+      <li><div><b>إدخال الدرجات والحالات</b><span>تحديد الحضور، إكمال الدرجات والأعذار، ثم الحفظ.</span><em>رئيس وأعضاء اللجنة</em></div></li>
+      <li><div><b>التأكد من اكتمال بيانات جميع الطلبة</b><span>إن وُجد نقص يُستكمل قبل الإرسال.</span></div></li>
+      <li><div><b>الإرسال إلى التدقيق</b><span>لا يملك عضو اللجنة العادي هذا الإجراء.</span><em>رئيس اللجنة الامتحانية حصرًا</em></div></li>
+      <li><div><b>قفل السجلات</b><span>يشمل السعي والنهائي والحضور والعذر وبقية البيانات.</span></div></li>
+    </ol>
+    <h3>مراجعة السجل ودورة التصحيح</h3>
+    <ol class="steps">
+      <li><div><b>مراجعة سجل الطالب</b><span>مطابقة الدرجات والحالات والأعذار مع الوثائق.</span><em>رئيس وأعضاء لجنة التدقيق</em></div></li>
+      <li><div><b>البيانات صحيحة: موافقة</b><span>يبقى السجل مقفلًا أمام اللجنة الامتحانية.</span></div></li>
+      <li><div><b>البيانات خاطئة: رفض مع سبب</b><span>يحدد المدقق السجل والحقل والخطأ المطلوب تصحيحه.</span></div></li>
+      <li><div><b>تصحيح العنصر المرفوض فقط</b><span>يُحفظ التصحيح، ثم يعيد رئيس اللجنة إرساله للتدقيق.</span></div></li>
+      <li><div><b>إنهاء التدقيق</b><span>بعد موافقة جميع السجلات والمواد وعدم وجود أي نقص.</span><em>رئيس التدقيق أو المخوّل صراحة</em></div></li>
+    </ol>
+  </div>
+  <p class="note v-no"><b>تنبيه:</b> وجود سجل مرفوض أو ناقص أو غير مدقق يمنع إنهاء التدقيق.</p>
+  <div class="two">
+    <div class="box"><h3>أين أصحح درجة السعي المرفوضة؟</h3><p>من توليد القوائم والدرجات، ثم قوائم درجات الطلبة. اختر السنة والفصل والبرنامج والمرحلة والمادة والطالب المرفوض.</p></div>
+    <div class="box"><h3>أين أصحح درجة الامتحان أو الحالة؟</h3><p>من الفترة الامتحانية، ثم المادة وسجل الطالب المرفوض. صحّح البيانات المثبت خطؤها فقط؛ رفض سجل واحد لا يفتح بقية الطلبة أو المواد.</p></div>
+  </div>
+</section>
+
+<section id="rollback">
+  <div class="sec-h"><h2>التراجع بعد إعلان النتائج</h2><p>مسار لتصحيح نتيجة سبق اعتمادها. التراجع شيء، وفتح التعديل شيء آخر مستقل.</p></div>
+  <div class="phase seq">
+    <h3>أولًا: تنفيذ التراجع</h3>
+    <ol class="steps">
+      <li><div><b>ثبوت خطأ فعلي في نتيجة معلنة</b><span>خطأ في درجة أو نتيجة يستوجب تصحيحها بعد الاعتماد.</span></div></li>
+      <li><div><b>التراجع عن إعلان النتائج</b><span>يُنفَّذ على الفترة المعنية.</span><em>المستخدم المخوّل بالتراجع</em></div></li>
+      <li><div><b>سحب النتائج من نظام SIS</b><span>يُلغى أثر النتائج والحالات الأكاديمية مؤقتًا في السيرة الدراسية.</span></div></li>
+      <li><div><b>إخفاء النتائج عن الطلبة</b><span>لا تبقى النتيجة المسحوبة ظاهرة في تطبيق الطالب.</span></div></li>
+    </ol>
+    <h3>ثانيًا: فتح التصحيح المقيّد</h3>
+    <ol class="steps">
+      <li><div><b>الفترة تعود إلى التدقيق</b><span>الدرجات تبقى مقفلة؛ لا عودة تلقائية إلى الإدخال المفتوح.</span></div></li>
+      <li><div><b>تحديد السجل الخاطئ</b><span>الطالب والمادة والعنصر الذي يحتوي على الخطأ.</span><em>اللجنة التدقيقية</em></div></li>
+      <li><div><b>رفض السجل مع السبب</b><span>ملاحظة تحدد الخطأ والحقل المطلوب تصحيحه.</span><em>اللجنة التدقيقية</em></div></li>
+      <li><div><b>تعديل العنصر المحدد</b><span>مطابقة الوثائق، تصحيح الخطأ، وحفظ التعديل.</span><em>اللجنة الامتحانية</em></div></li>
+    </ol>
+    <h3>ثالثًا: إعادة التدقيق والاعتماد والإعلان</h3>
+    <ol class="steps">
+      <li><div><b>إعادة الإرسال والتدقيق</b><span>رئيس اللجنة يعيد الإرسال، والمدقق يتحقق من التصحيح.</span></div></li>
+      <li><div><b>الإنهاء والمصادقات</b><span>إنهاء تدقيق جميع المواد، ثم رئيس اللجنة ورئيس القسم والعميد.</span></div></li>
+      <li><div><b>إعادة الإعلان والتحديث</b><span>تحديث النتائج والحالات في نظام SIS، ثم نشر المصحح للمستوفين.</span></div></li>
+    </ol>
+  </div>
+  <p class="note v-no"><b>نطاق التصحيح:</b> الطالب والمادة والعنصر المرتبط بسبب الرفض فقط. لا يجوز فتح بقية الدرجات أو إجراء تغييرات عامة.</p>
+</section>
+
+<section id="status">
+  <div class="sec-h"><h2>متى يمكن تعديل كل نوع من الحالات</h2><p>حالة الحضور، التأهل، النتيجة الأكاديمية، والنشر: لكل واحدة وظيفة مختلفة.</p></div>
+  <div class="two">
+    <div class="box"><h3>الحضور والغياب والعذر</h3>
+      <ul><li><b>حاضر:</b> يلزم إدخال درجات الامتحان المطلوبة.</li><li><b>غائب:</b> لا تُسجَّل له درجات امتحانية.</li><li><b>غائب بعذر رسمي:</b> يُضاف السبب مع الوثيقة المؤيدة. دون الوثيقة يبقى غائبًا.</li></ul>
+      <p>قبل الإرسال التعديل مسموح وفق الوثائق. بعده يُصحَّح الحضور أو العذر فقط إذا رُفض السجل لهذا السبب.</p>
+    </div>
+    <div class="box"><h3>التأهل والحالة الأكاديمية والنجاح</h3>
+      <ul><li><b>التسجيل والحالة الأساسية:</b> مستمر، مؤجل، مرقّن القيد. تُراجَع بيانات الطالب وسيرته في نظام SIS.</li><li><b>نتيجة المادة:</b> النجاح والرسوب والتأهل تتبع الدرجات والقواعد المعتمدة، ويُعاد احتسابها بعد أي تصحيح.</li></ul>
+      <p>لم يذكر الملف تبديل «ناجح / راسب / مؤهل» يدويًا كإجراء مستقل.</p>
+    </div>
+  </div>
+  <div class="phase seq">
+    <h3>الإعلان الرسمي ونشر نتيجة الطالب</h3>
+    <ol class="steps">
+      <li><div><b>موافقة العميد</b><span>بعد رئيس اللجنة ورئيس القسم، تصبح النتائج معلنة ومعتمدة.</span></div></li>
+      <li><div><b>تحديث نظام SIS</b><span>تُرسل النتائج والحالات، وقد تبقى مخفية عن الطالب.</span></div></li>
+      <li><div><b>استكمال متطلبات النشر</b><span>لا تُنشر النتيجة قبل استكمال المتطلبات الإدارية.</span></div></li>
+      <li><div><b>تغيير الحالة إلى منشور</b><span>من إدارة النتائج: لطالب واحد أو مجموعة أو جميع المستوفين.</span><em>المستخدم المخوّل بالنشر</em></div></li>
+    </ol>
+  </div>
+  <p class="note v-unk">التراجع عن الإعلان يخفي النتائج المنشورة ويسحبها. أما عكس «منشور» إلى «مخفي» يدويًا فلم يفصّله الملف.</p>
+</section>
+
+<section id="appeals">
+  <div class="sec-h"><h2>الاعتراضات ودرجات القرار</h2><p>مساران بعد إعلان النتائج. تغيير مسار الفترة لا يجيز تعديلًا عامًا على الدرجات الأصلية.</p></div>
+  <div class="two">
+    <div class="phase seq">
+      <h3>مسار الاعتراضات</h3>
+      <ol class="steps">
+        <li><div><b>فتح الاعتراضات وتحديد المدة</b><span>من «تغيير سير حالة الامتحان». التقديم خارج المدة ممنوع.</span></div></li>
+        <li><div><b>استكمال إجراء نظام SIS</b><span>لا يصل الطلب إلى اللجنة قبل اكتمال هذه الخطوة.</span></div></li>
+        <li><div><b>مراجعة اللجنة</b><span>مراجعة الدفاتر والدرجات. إن لم يثبت خطأ تُسجَّل النتيجة ويُغلق الاعتراض.</span></div></li>
+        <li><div><b>تصحيح البيانات المثبت خطؤها</b><span>الحفظ وحده لا يجعل النتيجة المصححة نهائية.</span></div></li>
+        <li><div><b>التدقيق ومعالجة الرفض</b><span>يراجع المدقق التصحيح، ويُنهى التدقيق بعد اكتمال الجميع.</span></div></li>
+      </ol>
+    </div>
+    <div class="phase seq">
+      <h3>مسار درجات القرار</h3>
+      <ol class="steps">
+        <li><div><b>كتاب رسمي وطالب راسب مشمول</b><span>تُحوَّل الفترة إلى الدرجات الإضافية ضمن نطاق الكتاب.</span></div></li>
+        <li><div><b>توزيع الإضافة</b><span>لكل قرار رصيد مستقل. تُمنح حاجة المادة إلى حد النجاح فقط.</span></div></li>
+        <li><div><b>حفظ الإضافة ومصدرها منفصلين</b><span>تبقى الدرجة الأصلية محفوظة.</span></div></li>
+        <li><div><b>إرسال الدرجات الإضافية إلى التدقيق</b><span>المرفوض فقط يُفتح للتصحيح.</span></div></li>
+      </ol>
+    </div>
+  </div>
+  <p class="note v-no"><b>ممنوع في مسار القرار:</b> تعديل السعي أو النظري أو العملي أو الحضور أو الغياب أو العذر أو درجات الناجحين أو أي درجة أصلية معتمدة.</p>
+  <p class="note v-ok">بعد اكتمال التدقيق والموافقات يُعاد إعلان النتائج وتحديث نظام SIS ونشر المصحح. إعادة فتح التقديم تتطلب إجراءً رسميًا جديدًا.</p>
+</section>
+
+<section id="rules">
+  <div class="sec-h"><h2>المرجع السريع</h2><p>ضوابط التعديل الأساسية. اختر حكمًا لتصفية القائمة.</p></div>
+  <div class="filters" id="filters"></div>
+  <ul class="rules" id="rules-list"></ul>
+  <p class="note v-unk"><b>إعادة توليد القوائم ليست حذفًا للسجلات.</b> بعد تصحيح النقص تحفظ إعادة التوليد درجات السعي الموجودة وتضيف الناقص. حذف السجلات إجراء مختلف بضوابطه.</p>
+</section>
+
+<section id="open">
+  <div class="sec-h"><h2>إجراءات لم يحسمها الملف</h2><p>هذه النقاط تحتاج تحديدًا صريحًا قبل اعتبارها صلاحية متاحة.</p></div>
+  <div class="two">
+    <div class="box"><h3>نقطة منع التراجع نهائيًا</h3><p>لا يوجد حد زمني أو حالة إغلاق سنة تمنع كل تراجع.</p></div>
+    <div class="box"><h3>العودة بعد إنهاء التدقيق وقبل الإعلان</h3><p>لم يُفصَّل زر العودة ولا شروطه ولا من يملك تنفيذه.</p></div>
+    <div class="box"><h3>أثر رفض مستوى من المصادقات</h3><p>الرفض يوقف اكتمال السلسلة، ولم يُحدَّد نطاق الرجوع.</p></div>
+    <div class="box"><h3>التراجع عن الإجراءات اللاحقة</h3><p>إلغاء قرار معتمد أو سحب اعتراض أو عكس النشر يدويًا لم تُفصَّل آلياته.</p></div>
+    <div class="box"><h3>صاحب صلاحية التراجع</h3><p>لم يُسمَّ الدور الوظيفي بدقة. لا تُفترض الصلاحية لمجرد عضوية اللجنة.</p></div>
+    <div class="box"><h3>خيار إدخال الدرجات بعد الإعلان</h3><p>مذكور ضمن تغيير سير حالة الامتحان، ولا يفتح السجلات الموافق عليها تلقائيًا.</p></div>
+  </div>
+</section>
+
+<section id="quiz">
+  <div class="sec-h"><h2>اختبر نفسك</h2><p>خمسة أسئلة قصيرة للتأكد من الفهم.</p></div>
+  <div class="quiz" id="quiz-box"></div>
+  <p class="score" id="score"></p>
+</section>
+
+<footer>المصدر: دليل التراجع وتعديل الحالات لنظام اللجنة الامتحانية (ست لوحات). هذه الصفحة تبسيط تعليمي، والمرجع عند الاختلاف هو الدليل الأصلي.</footer>
+</div>
+
+<script>
+(function(){document.documentElement.dir="rtl";document.documentElement.lang="ar";
+var $=function(id){return document.getElementById(id)};
+var L={ok:'مسموح',cond:'بشروط',no:'ممنوع',unk:'غير محدد صراحة'};
+
+/* decision helper */
+var tree=[
+ {t:'قبل إرسال المادة إلى التدقيق',s:'الدرجات والحالات ما زالت في مرحلة الإدخال.',
+  r:{v:'ok',h:'التعديل مسموح',li:['تعديل درجات السعي والامتحان والحضور والغياب والعذر.','يرسل رئيس اللجنة المادة بعد اكتمال بيانات جميع الطلبة.','موانع الإرسال: طالب بلا حالة، حاضر بلا درجات، عذر بلا وثيقة، حقول ناقصة، أو درجات تتجاوز الحد.'],w:'رئيس وأعضاء اللجنة الامتحانية'}},
+ {t:'المادة قيد التدقيق',s:'السماح بالتعديل يتحدد بحالة سجل الطالب.',
+  q:'هل رفض المدقق السجل مع بيان السبب؟',o:[
+   {t:'نعم، مرفوض مع سبب',r:{v:'cond',h:'تصحيح محدد فقط',li:['يُعدَّل العنصر المرتبط بسبب الرفض فقط.','بعد الحفظ يعيد رئيس اللجنة إرساله للتدقيق.','رفض سجل واحد لا يفتح بقية الطلبة أو المواد.'],w:'اللجنة الامتحانية، بطلب من اللجنة التدقيقية'}},
+   {t:'لا، موافق عليه أو قيد التدقيق',r:{v:'no',h:'التعديل ممنوع',li:['السجل يبقى مقفلًا، حتى أمام رئيس اللجنة.','الطريق الوحيد: أن ترفضه اللجنة التدقيقية مع سبب واضح.'],w:''}}]},
+ {t:'نتائج معتمدة ومعلنة',s:'موافقة العميد تعلن النتائج، والنشر للطلبة إجراء مستقل.',
+  q:'ما الذي تريد معالجته؟',o:[
+   {t:'خطأ في نتيجة معلنة',r:{v:'ok',h:'مسار التراجع عن الإعلان',li:['التراجع يسحب النتائج من نظام SIS ويخفيها عن الطلبة.','تعود الفترة إلى التدقيق، والدرجات تبقى مقفلة.','لا يُفتح السجل إلا برفضه مع السبب من اللجنة التدقيقية.'],w:'المستخدم المخوّل بالتراجع'}},
+   {t:'اعتراض طالب على نتيجة',r:{v:'cond',h:'مسار الاعتراضات',li:['يُفتح من «تغيير سير حالة الامتحان» مع تحديد المدة.','التصحيح يقتصر على البيانات المثبت خطؤها.','بعدها تدقيق، ثم موافقات، ثم إعادة إعلان.'],w:'المخوّل بتغيير سير حالة الامتحان'}},
+   {t:'درجات قرار لطالب راسب',r:{v:'cond',h:'مسار درجات القرار',li:['يتطلب كتابًا رسميًا وطالبًا راسبًا مشمولًا.','المتاح إضافة القرار فقط، إلى حد النجاح.','تعديل الدرجات الأصلية أو الحضور أو العذر ممنوع.'],w:''}}]}
+];
+function btn(o,onClick){var b=document.createElement('button');b.className='opt';b.type='button';b.setAttribute('aria-pressed','false');
+ b.innerHTML='<b></b>'+(o.s?'<span></span>':'');b.firstChild.textContent=o.t;if(o.s)b.lastChild.textContent=o.s;
+ b.addEventListener('click',function(){[].forEach.call(b.parentNode.children,function(x){x.setAttribute('aria-pressed','false')});b.setAttribute('aria-pressed','true');onClick()});return b}
+function show(r){var e=$('res');e.className='result v-'+r.v;
+ e.innerHTML='<span class="chip v-'+r.v+'" style="align-self:flex-start">'+L[r.v]+'</span><h3></h3><ul></ul>'+(r.w?'<p class="who"></p>':'');
+ e.children[1].textContent=r.h;r.li.forEach(function(x){var li=document.createElement('li');li.textContent=x;e.children[2].appendChild(li)});
+ if(r.w)e.lastChild.textContent='من ينفّذ: '+r.w;e.hidden=false;$('reset').hidden=false}
+tree.forEach(function(n){$('q1').appendChild(btn(n,function(){
+ $('res').hidden=true;$('q2').innerHTML='';
+ if(n.r){$('q2wrap').hidden=true;show(n.r)}
+ else{$('q2t').textContent=n.q;n.o.forEach(function(o){$('q2').appendChild(btn(o,function(){show(o.r)}))});$('q2wrap').hidden=false}
+}))});
+$('reset').addEventListener('click',function(){$('res').hidden=true;$('q2wrap').hidden=true;$('reset').hidden=true;
+ [].forEach.call($('q1').children,function(x){x.setAttribute('aria-pressed','false')})});
+
+/* rules */
+var rules=[
+ ['ok','قبل إرسال المادة','تعديل الدرجات والحضور والعذر ثم الحفظ وفق المتطلبات.'],
+ ['no','سجل غير مرفوض بعد الإرسال','في مسار الدرجات الأساسي: لا تعديل للسعي أو النهائي أو الحضور أو العذر، حتى من الرئيس.'],
+ ['cond','سجل مرفوض مع السبب','تصحيح العنصر المرتبط بالرفض فقط، ثم إعادة الإرسال من رئيس اللجنة.'],
+ ['ok','خطأ في نتيجة معلنة','التراجع يسحب نتائج نظام SIS ويخفيها، ويعيد الفترة إلى التدقيق.'],
+ ['no','بعد التراجع والسجل ما زال موافقًا','التراجع لا يفتح السجل. يجب رفضه مع السبب من اللجنة التدقيقية.'],
+ ['cond','إضافة عذر إلى غائب','سبب ووثيقة مؤيدة، مع مراعاة قفل المرحلة وحالة السجل.'],
+ ['no','تعديل الأصل أو الحضور أو العذر في مسار القرار','المتاح إضافة القرار للراسب المشمول فقط، ثم التدقيق والاعتماد.'],
+ ['cond','نشر نتيجة مخفية','بعد الإعلان، وللطلبة المستوفين للمتطلبات الإدارية، بواسطة المخوّل.'],
+ ['no','تغيير الدرجة القصوى للسعي بعد التوليد','لا تُغيَّر مباشرة من نظام اللجنة. تُراجَع إعدادات المادة في نظام SIS.']
+];
+var cur='all';
+function drawRules(){var ul=$('rules-list');ul.innerHTML='';rules.forEach(function(r){if(cur!=='all'&&r[0]!==cur)return;
+ var li=document.createElement('li');li.innerHTML='<span class="chip v-'+r[0]+'">'+L[r[0]]+'</span><div><b></b><span></span></div>';
+ li.querySelector('b').textContent=r[1];li.querySelector('div span').textContent=r[2];ul.appendChild(li)})}
+[['all','الكل'],['ok',L.ok],['cond',L.cond],['no',L.no]].forEach(function(f){var b=document.createElement('button');b.type='button';b.textContent=f[1];
+ b.setAttribute('aria-pressed',f[0]==='all'?'true':'false');b.addEventListener('click',function(){cur=f[0];
+ [].forEach.call($('filters').children,function(x){x.setAttribute('aria-pressed','false')});b.setAttribute('aria-pressed','true');drawRules()});$('filters').appendChild(b)});
+drawRules();
+
+/* quiz */
+var qs=[
+ ['من يملك إرسال المادة إلى التدقيق؟',['أي عضو في اللجنة','رئيس اللجنة الامتحانية حصرًا','لجنة التدقيق'],1,'عضو اللجنة العادي لا يملك هذا الإجراء.'],
+ ['سجل وافق عليه المدقق. هل يستطيع رئيس اللجنة تعديله؟',['نعم','لا'],1,'السجل الموافق عليه يبقى مقفلًا حتى أمام رئيس اللجنة.'],
+ ['بعد التراجع عن إعلان النتائج، هل تُفتح الدرجات تلقائيًا؟',['نعم، تعود إلى الإدخال المفتوح','لا، يلزم رفض السجل مع السبب'],1,'الفترة تعود إلى التدقيق والدرجات تبقى مقفلة.'],
+ ['طالب غائب قدّم عذرًا دون وثيقة. ما حالته؟',['غائب بعذر رسمي','يبقى غائبًا'],1,'دون الوثيقة المؤيدة يبقى غائبًا.'],
+ ['في مسار درجات القرار، ما المتاح؟',['تعديل درجة السعي','إضافة القرار للراسب المشمول فقط','تعديل درجات الناجحين'],1,'الدرجات الأصلية والحضور والعذر لا تُمَس في هذا المسار.']
+];
+var done=0,right=0;
+qs.forEach(function(q){var d=document.createElement('div');d.className='qz';d.innerHTML='<p class="t"></p><div class="a"></div><p class="fb" hidden></p>';
+ d.firstChild.textContent=q[0];var a=d.children[1],fb=d.children[2],answered=false;
+ q[1].forEach(function(t,i){var b=document.createElement('button');b.type='button';b.textContent=t;b.addEventListener('click',function(){
+  if(answered)return;answered=true;done++;if(i===q[2])right++;else b.className='wrong';a.children[q[2]].className='right';
+  fb.textContent=(i===q[2]?'صحيح. ':'ليس تمامًا. ')+q[3];fb.hidden=false;
+  if(done===qs.length)$('score').textContent='نتيجتك: '+right+' من '+qs.length;});a.appendChild(b)});
+ $('quiz-box').appendChild(d)});
+})();
+</script>
+
+</body>
+</html>
